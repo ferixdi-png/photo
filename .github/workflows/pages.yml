@@ -22,7 +22,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Build final 29-frame site
         run: |
@@ -35,13 +35,20 @@ jobs:
           cat assets/data-v7/*.b64 | tr -d '\n' | base64 --decode > public/assets/sprites/all.avif
           touch public/.nojekyll
 
+      - name: Enable GitHub Pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST repos/${{ github.repository }}/pages -f build_type=workflow || true
+          gh api --method PUT repos/${{ github.repository }}/pages -f build_type=workflow || true
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:
           enablement: true
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: public
 
