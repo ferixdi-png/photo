@@ -6,51 +6,45 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
 concurrency:
-  group: photo-editorial
+  group: github-pages
   cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Build final 29-frame site
-        run: |
-          mkdir -p assets/sprites
-          cat assets/data-v7/*.b64 | tr -d '\n' | base64 --decode > assets/sprites/all.avif
-          cp site.html index.html
-          cp site.js script.js
-          touch .nojekyll
-
-      - name: Publish built site to main
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html script.js assets/sprites/all.avif .nojekyll
-          git diff --cached --quiet || git commit -m "Publish final 29-frame editorial"
-          git push
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: .
-
   deploy:
-    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build final 29-frame site
+        run: |
+          mkdir -p public/assets/sprites
+          cp site.html public/index.html
+          cp styles.css public/styles.css
+          cp site.js public/script.js
+          mkdir -p public/assets
+          cp assets/favicon.svg public/assets/favicon.svg
+          cat assets/data-v7/*.b64 | tr -d '\n' | base64 --decode > public/assets/sprites/all.avif
+          touch public/.nojekyll
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
       - name: Deploy Pages
         id: deployment
         uses: actions/deploy-pages@v4
