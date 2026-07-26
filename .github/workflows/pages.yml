@@ -34,6 +34,13 @@ jobs:
           cp styles.css public/styles.css
           cp site.js public/script.js
           cp assets/favicon.svg public/assets/favicon.svg
+          cat >> public/styles.css <<'CSS'
+          .photo-trigger{background-image:none!important}
+          .photo-trigger img,.photo-trigger picture{opacity:1!important;pointer-events:auto!important}
+          .photo-trigger img{height:auto;object-fit:cover}
+          .hero__image img{width:100%;height:100%;object-fit:cover;object-position:center 43%}
+          .lightbox__canvas img{display:block;max-width:min(80vw,720px);max-height:87vh;object-fit:contain;box-shadow:0 20px 80px rgba(0,0,0,.45)}
+          CSS
           cat assets/data-v5/all.avif.000.b64 | tr -d '\n' | base64 --decode > /tmp/source-21.avif
           cat assets/data-v7/*.b64 | tr -d '\n' | base64 --decode > /tmp/source-29.avif
           python - <<'PY'
