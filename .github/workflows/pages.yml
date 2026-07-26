@@ -1,4 +1,4 @@
-name: Deploy premium photo editorial
+name: Publish premium photo editorial
 
 on:
   push:
@@ -6,41 +6,51 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
 concurrency:
-  group: pages
+  group: photo-editorial
   cancel-in-progress: true
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Build static site
+
+      - name: Build final 29-frame site
         run: |
-          mkdir -p public/assets/sprites
-          cp site.html public/index.html
-          cp styles.css public/styles.css
-          cp site.js public/script.js
-          mkdir -p public/assets
-          cp assets/favicon.svg public/assets/favicon.svg
-          cat assets/data-v7/*.b64 | tr -d '\n' | base64 --decode > public/assets/sprites/all.avif
-          touch public/.nojekyll
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-      - name: Upload artifact
+          mkdir -p assets/sprites
+          cat assets/data-v7/*.b64 | tr -d '\n' | base64 --decode > assets/sprites/all.avif
+          cp site.html index.html
+          cp site.js script.js
+          touch .nojekyll
+
+      - name: Publish built site to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html script.js assets/sprites/all.avif .nojekyll
+          git diff --cached --quiet || git commit -m "Publish final 29-frame editorial"
+          git push
+
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: public
-      - name: Deploy
+          path: .
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Deploy Pages
         id: deployment
         uses: actions/deploy-pages@v4
