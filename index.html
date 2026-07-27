@@ -1,1 +1,78 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f4f1eb"><title>Фотосет — 29 кадров</title><meta name="description" content="Авторская AI-фотосерия из 29 кадров."><link rel="stylesheet" href="styles.css"><script defer src="script.js"></script></head><body><header class="top"><a href="#top" class="brand">ФОТОСЕТ</a><div class="top__meta">AI EDITORIAL · 29 КАДРОВ</div><a href="#archive" class="top__link">ВСЕ ФОТО</a></header><main id="top"><section class="hero"><div class="hero__copy"><div class="eyebrow">АВТОРСКАЯ СЕРИЯ</div><h1>Свет.<br>Форма.<br>Характер.</h1><p>Город, студия, личное пространство, лето и вечерний свет — одна героиня в 29 разных состояниях.</p><div class="actions"><a href="#story" class="btn">СМОТРЕТЬ СЕРИЮ</a><a href="#archive" class="btn btn--ghost">ОТКРЫТЬ АРХИВ</a></div></div><button class="photo hero__photo" data-photo="4" aria-label="Открыть главный кадр"></button></section><section id="story" class="story"><article class="chapter"><header><span>01</span><div><h2>Город</h2><p>Дневной свет, спокойствие и лёгкое движение.</p></div></header><div class="grid" data-photos="1,2,3,27"></div></article><article class="chapter chapter--soft"><header><span>02</span><div><h2>Студия и форма</h2><p>Силуэт, поза, фактура и точная геометрия кадра.</p></div></header><div class="grid" data-photos="5,6,10,16,22,23,24"></div></article><article class="chapter"><header><span>03</span><div><h2>Личное пространство</h2><p>Домашний свет и более близкая, спокойная интонация.</p></div></header><div class="grid" data-photos="7,8,9,12,13,14,15,18,21,25,29"></div></article><article class="chapter chapter--soft"><header><span>04</span><div><h2>Лето и движение</h2><p>Солнце, вода, открытый воздух, поездки и спорт.</p></div></header><div class="grid" data-photos="4,11,17,19,20,26,28"></div></article></section><section class="archive" id="archive"><header><span>05</span><div><h2>Все 29 кадров</h2><p>Нажми на любой кадр, чтобы открыть его крупно.</p></div></header><div class="archive__grid" id="archiveGrid"></div></section></main><footer><div><strong>ФОТОСЕРИЯ 001</strong><br>29 кадров · единый образ · единый визуальный язык</div><a href="#top">НАВЕРХ ↑</a></footer><div class="loader" id="loader"><span>ЗАГРУЖАЮ ФОТОСЕРИЮ</span></div><dialog id="lightbox"><button class="close" aria-label="Закрыть">×</button><button class="nav prev" aria-label="Предыдущий">‹</button><div class="lightbox__content"><div class="lightbox__photo photo"></div><div class="lightbox__caption"><span id="caption"></span><span id="counter"></span></div></div><button class="nav next" aria-label="Следующий">›</button></dialog></body></html>
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f7f5f1">
+  <title>Фотосет — 29 кадров</title>
+  <meta name="description" content="Минималистичная фотосерия из 29 кадров.">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <header class="header">
+    <a class="logo" href="#top">ФОТОСЕТ</a>
+    <span>29 КАДРОВ</span>
+  </header>
+
+  <main id="top">
+    <section class="intro">
+      <div class="intro__copy">
+        <p>AI-ФОТОСЕССИЯ · 2026</p>
+        <h1>Одна героиня.<br>Двадцать девять кадров.</h1>
+        <a href="#gallery">Смотреть фотосет ↓</a>
+      </div>
+      <button class="cover shot" data-index="3" aria-label="Открыть фотографию 4">
+        <img src="assets/images/04.webp" width="720" height="1280" alt="Обложка фотосета" fetchpriority="high" decoding="sync">
+      </button>
+    </section>
+
+    <section class="gallery" id="gallery" aria-label="Все фотографии">
+      <button class="shot" data-index="0" aria-label="Открыть фотографию 1"><img src="assets/images/01.webp" width="720" height="1280" alt="Фотография 1" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="1" aria-label="Открыть фотографию 2"><img src="assets/images/02.webp" width="720" height="1280" alt="Фотография 2" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="2" aria-label="Открыть фотографию 3"><img src="assets/images/03.webp" width="720" height="1280" alt="Фотография 3" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="3" aria-label="Открыть фотографию 4"><img src="assets/images/04.webp" width="720" height="1280" alt="Фотография 4" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="4" aria-label="Открыть фотографию 5"><img src="assets/images/05.webp" width="720" height="1280" alt="Фотография 5" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="5" aria-label="Открыть фотографию 6"><img src="assets/images/06.webp" width="720" height="1280" alt="Фотография 6" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="6" aria-label="Открыть фотографию 7"><img src="assets/images/07.webp" width="720" height="1280" alt="Фотография 7" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="7" aria-label="Открыть фотографию 8"><img src="assets/images/08.webp" width="720" height="1280" alt="Фотография 8" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="8" aria-label="Открыть фотографию 9"><img src="assets/images/09.webp" width="720" height="1280" alt="Фотография 9" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="9" aria-label="Открыть фотографию 10"><img src="assets/images/10.webp" width="720" height="1280" alt="Фотография 10" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="10" aria-label="Открыть фотографию 11"><img src="assets/images/11.webp" width="720" height="1280" alt="Фотография 11" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="11" aria-label="Открыть фотографию 12"><img src="assets/images/12.webp" width="720" height="1280" alt="Фотография 12" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="12" aria-label="Открыть фотографию 13"><img src="assets/images/13.webp" width="720" height="1280" alt="Фотография 13" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="13" aria-label="Открыть фотографию 14"><img src="assets/images/14.webp" width="720" height="1280" alt="Фотография 14" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="14" aria-label="Открыть фотографию 15"><img src="assets/images/15.webp" width="720" height="1280" alt="Фотография 15" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="15" aria-label="Открыть фотографию 16"><img src="assets/images/16.webp" width="720" height="1280" alt="Фотография 16" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="16" aria-label="Открыть фотографию 17"><img src="assets/images/17.webp" width="720" height="1280" alt="Фотография 17" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="17" aria-label="Открыть фотографию 18"><img src="assets/images/18.webp" width="720" height="1280" alt="Фотография 18" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="18" aria-label="Открыть фотографию 19"><img src="assets/images/19.webp" width="720" height="1280" alt="Фотография 19" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="19" aria-label="Открыть фотографию 20"><img src="assets/images/20.webp" width="720" height="1280" alt="Фотография 20" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="20" aria-label="Открыть фотографию 21"><img src="assets/images/21.webp" width="720" height="1280" alt="Фотография 21" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="21" aria-label="Открыть фотографию 22"><img src="assets/images/22.webp" width="720" height="1280" alt="Фотография 22" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="22" aria-label="Открыть фотографию 23"><img src="assets/images/23.webp" width="720" height="1280" alt="Фотография 23" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="23" aria-label="Открыть фотографию 24"><img src="assets/images/24.webp" width="720" height="1280" alt="Фотография 24" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="24" aria-label="Открыть фотографию 25"><img src="assets/images/25.webp" width="720" height="1280" alt="Фотография 25" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="25" aria-label="Открыть фотографию 26"><img src="assets/images/26.webp" width="720" height="1280" alt="Фотография 26" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="26" aria-label="Открыть фотографию 27"><img src="assets/images/27.webp" width="720" height="1280" alt="Фотография 27" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="27" aria-label="Открыть фотографию 28"><img src="assets/images/28.webp" width="720" height="1280" alt="Фотография 28" loading="lazy" decoding="async"></button>
+      <button class="shot" data-index="28" aria-label="Открыть фотографию 29"><img src="assets/images/29.webp" width="720" height="1280" alt="Фотография 29" loading="lazy" decoding="async"></button>
+    </section>
+  </main>
+
+  <footer>
+    <span>ФОТОСЕТ · 2026</span>
+    <a href="#top">Наверх ↑</a>
+  </footer>
+
+  <dialog class="lightbox" id="lightbox">
+    <button class="lightbox__close" type="button" aria-label="Закрыть">×</button>
+    <button class="lightbox__prev" type="button" aria-label="Предыдущая фотография">‹</button>
+    <figure>
+      <img id="lightboxImage" src="assets/images/01.webp" width="720" height="1280" alt="Фотография крупным планом">
+      <figcaption id="lightboxCounter">01 / 29</figcaption>
+    </figure>
+    <button class="lightbox__next" type="button" aria-label="Следующая фотография">›</button>
+  </dialog>
+</body>
+</html>
