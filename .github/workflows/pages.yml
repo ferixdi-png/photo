@@ -1,4 +1,4 @@
-name: Публикация фотосета
+name: Подготовка фотосета
 
 on:
   push:
@@ -7,19 +7,14 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 concurrency:
-  group: github-pages
+  group: gallery-assets
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Получить проект
         uses: actions/checkout@v4
@@ -27,26 +22,20 @@ jobs:
       - name: Установить обработку изображений
         run: python -m pip install --quiet pillow pillow-avif-plugin
 
-      - name: Собрать сайт и 29 отдельных фотографий
+      - name: Создать 29 отдельных фотографий
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf public
-          mkdir -p public/assets/images public/assets
-          cp index.html public/index.html
-          cp styles.css public/styles.css
-          cp script.js public/script.js
-          cp assets/favicon.svg public/assets/favicon.svg
-          cp assets/sprites/all.avif /tmp/all.avif
-
+          rm -rf assets/images
+          mkdir -p assets/images
           python - <<'PY'
           from pathlib import Path
           from PIL import Image, ImageFilter
           import pillow_avif
 
-          out = Path('public/assets/images')
-          source = Image.open('/tmp/all.avif').convert('RGB')
+          source = Image.open('assets/sprites/all.avif').convert('RGB')
           assert source.size == (200, 10324), source.size
+          out = Path('assets/images')
 
           for number in range(1, 30):
               top = (number - 1) * 356
@@ -59,34 +48,13 @@ jobs:
           assert len(files) == 29, len(files)
           assert all(file.stat().st_size > 10000 for file in files)
           PY
+          touch .nojekyll
 
-          touch public/.nojekyll
-          test -s public/assets/images/01.webp
-          test -s public/assets/images/29.webp
-
-      - name: Настроить GitHub Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-
-      - name: Загрузить сайт
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: public
-
-      - name: Опубликовать
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-      - name: Зафиксировать успешную публикацию
+      - name: Сохранить готовые фотографии
         shell: bash
         run: |
-          printf 'URL=%s\nCOMMIT=%s\nDEPLOYED_AT=%s\nPHOTOS=29\n' \
-            '${{ steps.deployment.outputs.page_url }}' \
-            "$GITHUB_SHA" \
-            "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > DEPLOYED.txt
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add DEPLOYED.txt
-          git diff --cached --quiet || git commit -m 'Подтверждение успешной публикации [skip ci]'
+          git add assets/images .nojekyll
+          git diff --cached --quiet || git commit -m 'Добавить 29 готовых фотографий [skip ci]'
           git push
