@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -37,9 +37,7 @@ jobs:
           cp styles.css public/styles.css
           cp script.js public/script.js
           cp assets/favicon.svg public/assets/favicon.svg
-
-          tr -d '\n\r ' < assets/data-v5/all.avif.000.b64 | base64 --decode > /tmp/high.avif
-          cat assets/data-v7/*.b64 | tr -d '\n\r ' | base64 --decode > /tmp/all.avif
+          cp assets/sprites/all.avif /tmp/all.avif
 
           python - <<'PY'
           from pathlib import Path
@@ -47,27 +45,19 @@ jobs:
           import pillow_avif
 
           out = Path('public/assets/images')
-          high = Image.open('/tmp/high.avif').convert('RGB')
-          all_frames = Image.open('/tmp/all.avif').convert('RGB')
-
-          assert high.width == 360, high.size
-          assert all_frames.width == 200, all_frames.size
+          source = Image.open('/tmp/all.avif').convert('RGB')
+          assert source.size == (200, 10324), source.size
 
           for number in range(1, 30):
-              if number <= 21:
-                  source = high
-                  width, height = 360, 640
-              else:
-                  source = all_frames
-                  width, height = 200, 356
-
-              top = (number - 1) * height
-              frame = source.crop((0, top, width, top + height))
+              top = (number - 1) * 356
+              frame = source.crop((0, top, 200, top + 356))
               frame = frame.resize((720, 1280), Image.Resampling.LANCZOS)
-              frame = frame.filter(ImageFilter.UnsharpMask(radius=1.1, percent=125, threshold=2))
+              frame = frame.filter(ImageFilter.UnsharpMask(radius=1.0, percent=115, threshold=2))
               frame.save(out / f'{number:02d}.webp', 'WEBP', quality=92, method=6)
 
-          assert len(list(out.glob('*.webp'))) == 29
+          files = list(out.glob('*.webp'))
+          assert len(files) == 29, len(files)
+          assert all(file.stat().st_size > 10000 for file in files)
           PY
 
           touch public/.nojekyll
@@ -87,3 +77,16 @@ jobs:
       - name: Опубликовать
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Зафиксировать успешную публикацию
+        shell: bash
+        run: |
+          printf 'URL=%s\nCOMMIT=%s\nDEPLOYED_AT=%s\nPHOTOS=29\n' \
+            '${{ steps.deployment.outputs.page_url }}' \
+            "$GITHUB_SHA" \
+            "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > DEPLOYED.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add DEPLOYED.txt
+          git diff --cached --quiet || git commit -m 'Подтверждение успешной публикации [skip ci]'
+          git push
