@@ -1,1 +1,75 @@
-const TOTAL=29;const HIGH={w:360,h:640,count:21,paths:['assets/data-v5/all.avif.000.b64']};const LOW={w:200,h:356,count:29,paths:['assets/data-v7/000.b64','assets/data-v7/001.b64','assets/data-v7/002.b64','assets/data-v7/003.b64','assets/data-v7/004.b64','assets/data-v7/005.b64']};let sources=null,current=1;const registered=[];const pad=n=>String(n).padStart(2,'0');async function loadSprite(paths){const parts=[];for(const path of paths){const r=await fetch(path,{cache:'force-cache'});if(!r.ok)throw new Error(path);parts.push((await r.text()).replace(/\s+/g,''))}const s=atob(parts.join(''));const bytes=new Uint8Array(s.length);for(let o=0;o<s.length;o+=32768){const end=Math.min(o+32768,s.length);for(let i=o;i<end;i++)bytes[i]=s.charCodeAt(i)}const url=URL.createObjectURL(new Blob([bytes],{type:'image/avif'}));const test=new Image();test.src=url;await test.decode();return url}function sourceFor(n){return n<=21?{...HIGH,url:sources.high,index:n-1}:{...LOW,url:sources.low,index:n-1}}function paint(el,n,contain=false){if(!sources||!el.clientWidth||!el.clientHeight)return;const s=sourceFor(n),w=el.clientWidth,h=el.clientHeight,scale=contain?Math.min(w/s.w,h/s.h):Math.max(w/s.w,h/s.h),bw=s.w*scale,slice=s.h*scale,bh=slice*s.count,x=(w-bw)/2,y=-(s.index*slice)+(h-slice)/2;el.style.backgroundImage=`url('${s.url}')`;el.style.backgroundSize=`${bw}px ${bh}px`;el.style.backgroundPosition=`${x}px ${y}px`;el.style.backgroundRepeat='no-repeat'}function bind(el,n,contain=false){el.dataset.photo=n;registered.push({el,n,contain});paint(el,n,contain);el.addEventListener('click',()=>openBox(n))}function build(){document.querySelectorAll('.grid').forEach(grid=>{grid.dataset.photos.split(',').map(Number).forEach(n=>{const b=document.createElement('button');b.className='photo';b.setAttribute('aria-label',`Открыть кадр ${n}`);grid.appendChild(b);bind(b,n)})});const archive=document.querySelector('#archiveGrid');for(let n=1;n<=TOTAL;n++){const wrap=document.createElement('div');wrap.className='archive__item';const b=document.createElement('button');b.className='photo';b.setAttribute('aria-label',`Открыть кадр ${n}`);const s=document.createElement('span');s.textContent=pad(n);wrap.append(b,s);archive.appendChild(wrap);bind(b,n)}bind(document.querySelector('.hero__photo'),4)}const box=document.querySelector('#lightbox'),boxPhoto=document.querySelector('.lightbox__photo'),counter=document.querySelector('#counter'),caption=document.querySelector('#caption');function openBox(n){current=n;counter.textContent=`${pad(n)} / ${TOTAL}`;caption.textContent=`Кадр ${pad(n)}`;if(!box.open)box.showModal();requestAnimationFrame(()=>paint(boxPhoto,n,true))}document.querySelector('.close').onclick=()=>box.close();document.querySelector('.prev').onclick=()=>openBox(current===1?TOTAL:current-1);document.querySelector('.next').onclick=()=>openBox(current===TOTAL?1:current+1);box.addEventListener('click',e=>{if(e.target===box)box.close()});addEventListener('keydown',e=>{if(!box.open)return;if(e.key==='Escape')box.close();if(e.key==='ArrowLeft')openBox(current===1?TOTAL:current-1);if(e.key==='ArrowRight')openBox(current===TOTAL?1:current+1)});addEventListener('resize',()=>{registered.forEach(x=>paint(x.el,x.n,x.contain));if(box.open)paint(boxPhoto,current,true)},{passive:true});(async()=>{try{const[high,low]=await Promise.all([loadSprite(HIGH.paths),loadSprite(LOW.paths)]);sources={high,low};build();document.querySelector('#loader').classList.add('is-hidden')}catch(e){console.error(e);document.querySelector('#loader span').textContent='ОБНОВИТЕ СТРАНИЦУ'}})();
+const TOTAL=29;
+const pad=n=>String(n).padStart(2,'0');
+const photoUrl=n=>`assets/images/${pad(n)}.webp`;
+let current=1;
+
+function setPhoto(element,number,contain=false){
+  element.dataset.photo=number;
+  element.style.backgroundImage=`url('${photoUrl(number)}')`;
+  element.style.backgroundSize=contain?'contain':'cover';
+  element.style.backgroundPosition='center';
+  element.style.backgroundRepeat='no-repeat';
+  element.addEventListener('click',()=>openBox(number));
+}
+
+function buildGallery(){
+  document.querySelectorAll('.grid').forEach(grid=>{
+    grid.dataset.photos.split(',').map(Number).forEach(number=>{
+      const button=document.createElement('button');
+      button.className='photo';
+      button.setAttribute('aria-label',`Открыть кадр ${number}`);
+      grid.appendChild(button);
+      setPhoto(button,number);
+    });
+  });
+
+  const archive=document.querySelector('#archiveGrid');
+  for(let number=1;number<=TOTAL;number++){
+    const item=document.createElement('div');
+    item.className='archive__item';
+    const button=document.createElement('button');
+    button.className='photo';
+    button.setAttribute('aria-label',`Открыть кадр ${number}`);
+    const label=document.createElement('span');
+    label.textContent=pad(number);
+    item.append(button,label);
+    archive.appendChild(item);
+    setPhoto(button,number);
+  }
+
+  setPhoto(document.querySelector('.hero__photo'),4);
+}
+
+const box=document.querySelector('#lightbox');
+const boxPhoto=document.querySelector('.lightbox__photo');
+const counter=document.querySelector('#counter');
+const caption=document.querySelector('#caption');
+
+function openBox(number){
+  current=number;
+  boxPhoto.style.backgroundImage=`url('${photoUrl(number)}')`;
+  boxPhoto.style.backgroundSize='contain';
+  boxPhoto.style.backgroundPosition='center';
+  boxPhoto.style.backgroundRepeat='no-repeat';
+  counter.textContent=`${pad(number)} / ${TOTAL}`;
+  caption.textContent=`Кадр ${pad(number)}`;
+  if(!box.open) box.showModal();
+}
+
+document.querySelector('.close').onclick=()=>box.close();
+document.querySelector('.prev').onclick=()=>openBox(current===1?TOTAL:current-1);
+document.querySelector('.next').onclick=()=>openBox(current===TOTAL?1:current+1);
+box.addEventListener('click',event=>{if(event.target===box)box.close()});
+addEventListener('keydown',event=>{
+  if(!box.open)return;
+  if(event.key==='Escape')box.close();
+  if(event.key==='ArrowLeft')openBox(current===1?TOTAL:current-1);
+  if(event.key==='ArrowRight')openBox(current===TOTAL?1:current+1);
+});
+
+buildGallery();
+const cover=new Image();
+cover.onload=()=>document.querySelector('#loader').classList.add('is-hidden');
+cover.onerror=()=>document.querySelector('#loader').classList.add('is-hidden');
+cover.src=photoUrl(4);
+setTimeout(()=>document.querySelector('#loader').classList.add('is-hidden'),4000);
