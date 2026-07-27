@@ -1,4 +1,4 @@
-name: Publish premium photo editorial in 1K
+name: Публикация фотосерии
 
 on:
   push:
@@ -21,77 +21,67 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Checkout
+      - name: Получение проекта
         uses: actions/checkout@v4
 
-      - name: Install image tools
+      - name: Установка обработки изображений
         run: python -m pip install --quiet pillow pillow-avif-plugin
 
-      - name: Build 1K image set and static site
+      - name: Сборка русской версии и 29 отдельных фотографий
         run: |
           mkdir -p public/assets/images public/assets
-          cp site.html public/index.html
+          cp index.html public/index.html
           cp styles.css public/styles.css
-          cp site.js public/script.js
+          cp script.js public/script.js
           cp assets/favicon.svg public/assets/favicon.svg
-          cat >> public/styles.css <<'CSS'
-          .photo-trigger{background-image:none!important}
-          .photo-trigger img,.photo-trigger picture{opacity:1!important;pointer-events:auto!important}
-          .photo-trigger img{height:auto;object-fit:cover}
-          .hero__image img{width:100%;height:100%;object-fit:cover;object-position:center 43%}
-          .lightbox__canvas img{display:block;max-width:min(80vw,720px);max-height:87vh;object-fit:contain;box-shadow:0 20px 80px rgba(0,0,0,.45)}
-          CSS
-          cat assets/data-v5/all.avif.000.b64 | tr -d '\n' | base64 --decode > /tmp/source-21.avif
-          cat assets/data-v7/*.b64 | tr -d '\n' | base64 --decode > /tmp/source-29.avif
+          cat assets/data-v5/all.avif.000.b64 | tr -d '\n' | base64 --decode > /tmp/high.avif
+          cat assets/data-v7/*.b64 | tr -d '\n' | base64 --decode > /tmp/all.avif
           python - <<'PY'
+          from pathlib import Path
           from PIL import Image, ImageFilter
           import pillow_avif
-          from pathlib import Path
 
-          out = Path('public/assets/images')
-          source21 = Image.open('/tmp/source-21.avif').convert('RGB')
-          source29 = Image.open('/tmp/source-29.avif').convert('RGB')
+          output = Path('public/assets/images')
+          high = Image.open('/tmp/high.avif').convert('RGB')
+          all_frames = Image.open('/tmp/all.avif').convert('RGB')
 
           for number in range(1, 30):
               if number <= 21:
-                  w, h = 360, 640
-                  top = (number - 1) * h
-                  frame = source21.crop((0, top, w, top + h))
+                  width, height = 360, 640
+                  top = (number - 1) * height
+                  frame = high.crop((0, top, width, top + height))
               else:
-                  w, h = 200, 356
-                  top = (number - 1) * h
-                  frame = source29.crop((0, top, w, top + h))
+                  width, height = 200, 356
+                  top = (number - 1) * height
+                  frame = all_frames.crop((0, top, width, top + height))
 
               frame = frame.resize((720, 1280), Image.Resampling.LANCZOS)
-              frame = frame.filter(ImageFilter.UnsharpMask(radius=1.1, percent=125, threshold=2))
-              frame.save(out / f'{number:02d}.webp', 'WEBP', quality=95, method=6)
+              frame = frame.filter(ImageFilter.UnsharpMask(radius=1.0, percent=110, threshold=2))
+              frame.save(output / f'{number:02d}.webp', 'WEBP', quality=92, method=6)
           PY
           touch public/.nojekyll
 
-      - name: Publish generated files to repository
+      - name: Сохранение готовых фотографий в репозиторий
         run: |
-          cp public/index.html ./index.html
-          cp public/styles.css ./styles.css
-          cp public/script.js ./script.js
-          cp public/.nojekyll ./.nojekyll
           mkdir -p assets/images
           cp public/assets/images/*.webp assets/images/
+          cp public/.nojekyll ./.nojekyll
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html styles.css script.js .nojekyll assets/images
-          git diff --cached --quiet || git commit -m "Publish verified 1K photo assets [skip ci]"
+          git add assets/images .nojekyll
+          git diff --cached --quiet || git commit -m "Готовые фотографии сайта [skip ci]"
           git push
 
-      - name: Configure Pages
+      - name: Настройка GitHub Pages
         uses: actions/configure-pages@v5
         with:
           enablement: true
 
-      - name: Upload Pages artifact
+      - name: Загрузка сайта
         uses: actions/upload-pages-artifact@v4
         with:
           path: public
 
-      - name: Deploy Pages
+      - name: Публикация
         id: deployment
         uses: actions/deploy-pages@v4
