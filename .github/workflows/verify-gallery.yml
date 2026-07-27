@@ -13,29 +13,43 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python -m pip install --quiet pillow pillow-avif-plugin
-      - name: Создать и проверить 29 фотографий
+      - name: Диагностика исходных фотографий
         shell: bash
         run: |
-          set -euo pipefail
           mkdir -p /tmp/images
-          tr -d '\n\r ' < assets/data-v5/all.avif.000.b64 | base64 --decode > /tmp/high.avif
-          cat assets/data-v7/*.b64 | tr -d '\n\r ' | base64 --decode > /tmp/all.avif
-          python - <<'PY'
+          {
+            echo 'FILES:'
+            find assets/data-v5 assets/data-v7 -maxdepth 1 -type f -printf '%p %s bytes\n' | sort
+            echo 'DECODE:'
+          } > diagnostic.txt
+          tr -d '\n\r ' < assets/data-v5/all.avif.000.b64 | base64 --decode > /tmp/high.avif 2>> diagnostic.txt || echo 'HIGH_DECODE_FAILED' >> diagnostic.txt
+          cat assets/data-v7/*.b64 | tr -d '\n\r ' | base64 --decode > /tmp/all.avif 2>> diagnostic.txt || echo 'LOW_DECODE_FAILED' >> diagnostic.txt
+          file /tmp/high.avif /tmp/all.avif >> diagnostic.txt 2>&1
+          python - <<'PY' >> diagnostic.txt 2>&1
           from pathlib import Path
-          from PIL import Image
-          import pillow_avif
-          high = Image.open('/tmp/high.avif').convert('RGB')
-          low = Image.open('/tmp/all.avif').convert('RGB')
-          print('HIGH', high.size)
-          print('LOW', low.size)
-          out = Path('/tmp/images')
-          for n in range(1, 30):
-              source, w, h = (high,360,640) if n <= 21 else (low,200,356)
-              top = (n-1)*h
-              frame = source.crop((0,top,w,top+h)).resize((720,1280), Image.Resampling.LANCZOS)
-              frame.save(out/f'{n:02d}.webp','WEBP',quality=90,method=6)
-          files=list(out.glob('*.webp'))
-          assert len(files)==29, len(files)
-          assert all(f.stat().st_size > 10000 for f in files)
-          print('VERIFIED', len(files), 'FILES')
+          import traceback
+          try:
+              from PIL import Image
+              import pillow_avif
+              high = Image.open('/tmp/high.avif').convert('RGB')
+              low = Image.open('/tmp/all.avif').convert('RGB')
+              print('HIGH_SIZE', high.size)
+              print('LOW_SIZE', low.size)
+              out = Path('/tmp/images')
+              for n in range(1, 30):
+                  source, w, h = (high,360,640) if n <= 21 else (low,200,356)
+                  top=(n-1)*h
+                  frame=source.crop((0,top,w,top+h)).resize((720,1280),Image.Resampling.LANCZOS)
+                  frame.save(out/f'{n:02d}.webp','WEBP',quality=90,method=6)
+              files=list(out.glob('*.webp'))
+              print('OUTPUT_COUNT',len(files))
+              print('OUTPUT_SIZES',min(f.stat().st_size for f in files),max(f.stat().st_size for f in files))
+          except Exception:
+              traceback.print_exc()
           PY
+          cat diagnostic.txt
+      - name: Сохранить диагностику
+        uses: actions/upload-artifact@v4
+        with:
+          name: gallery-diagnostic
+          path: diagnostic.txt
