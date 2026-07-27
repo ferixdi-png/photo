@@ -1,4 +1,4 @@
-name: Публикация фотосерии
+name: Публикация фотосета
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
@@ -21,67 +21,69 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Получение проекта
+      - name: Получить проект
         uses: actions/checkout@v4
 
-      - name: Установка обработки изображений
+      - name: Установить обработку изображений
         run: python -m pip install --quiet pillow pillow-avif-plugin
 
-      - name: Сборка русской версии и 29 отдельных фотографий
+      - name: Собрать сайт и 29 отдельных фотографий
+        shell: bash
         run: |
+          set -euo pipefail
+          rm -rf public
           mkdir -p public/assets/images public/assets
           cp index.html public/index.html
           cp styles.css public/styles.css
           cp script.js public/script.js
           cp assets/favicon.svg public/assets/favicon.svg
-          cat assets/data-v5/all.avif.000.b64 | tr -d '\n' | base64 --decode > /tmp/high.avif
-          cat assets/data-v7/*.b64 | tr -d '\n' | base64 --decode > /tmp/all.avif
+
+          tr -d '\n\r ' < assets/data-v5/all.avif.000.b64 | base64 --decode > /tmp/high.avif
+          cat assets/data-v7/*.b64 | tr -d '\n\r ' | base64 --decode > /tmp/all.avif
+
           python - <<'PY'
           from pathlib import Path
           from PIL import Image, ImageFilter
           import pillow_avif
 
-          output = Path('public/assets/images')
+          out = Path('public/assets/images')
           high = Image.open('/tmp/high.avif').convert('RGB')
           all_frames = Image.open('/tmp/all.avif').convert('RGB')
 
+          assert high.width == 360, high.size
+          assert all_frames.width == 200, all_frames.size
+
           for number in range(1, 30):
               if number <= 21:
+                  source = high
                   width, height = 360, 640
-                  top = (number - 1) * height
-                  frame = high.crop((0, top, width, top + height))
               else:
+                  source = all_frames
                   width, height = 200, 356
-                  top = (number - 1) * height
-                  frame = all_frames.crop((0, top, width, top + height))
 
+              top = (number - 1) * height
+              frame = source.crop((0, top, width, top + height))
               frame = frame.resize((720, 1280), Image.Resampling.LANCZOS)
-              frame = frame.filter(ImageFilter.UnsharpMask(radius=1.0, percent=110, threshold=2))
-              frame.save(output / f'{number:02d}.webp', 'WEBP', quality=92, method=6)
+              frame = frame.filter(ImageFilter.UnsharpMask(radius=1.1, percent=125, threshold=2))
+              frame.save(out / f'{number:02d}.webp', 'WEBP', quality=92, method=6)
+
+          assert len(list(out.glob('*.webp'))) == 29
           PY
+
           touch public/.nojekyll
+          test -s public/assets/images/01.webp
+          test -s public/assets/images/29.webp
 
-      - name: Сохранение готовых фотографий в репозиторий
-        run: |
-          mkdir -p assets/images
-          cp public/assets/images/*.webp assets/images/
-          cp public/.nojekyll ./.nojekyll
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/images .nojekyll
-          git diff --cached --quiet || git commit -m "Готовые фотографии сайта [skip ci]"
-          git push
-
-      - name: Настройка GitHub Pages
+      - name: Настроить GitHub Pages
         uses: actions/configure-pages@v5
         with:
           enablement: true
 
-      - name: Загрузка сайта
+      - name: Загрузить сайт
         uses: actions/upload-pages-artifact@v4
         with:
           path: public
 
-      - name: Публикация
+      - name: Опубликовать
         id: deployment
         uses: actions/deploy-pages@v4
