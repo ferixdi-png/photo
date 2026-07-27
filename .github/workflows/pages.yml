@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -63,10 +63,24 @@ jobs:
                   frame = source29.crop((0, top, w, top + h))
 
               frame = frame.resize((720, 1280), Image.Resampling.LANCZOS)
-              frame = frame.filter(ImageFilter.UnsharpMask(radius=1.1, percent=115, threshold=2))
-              frame.save(out / f'{number:02d}.webp', 'WEBP', quality=94, method=6)
+              frame = frame.filter(ImageFilter.UnsharpMask(radius=1.1, percent=125, threshold=2))
+              frame.save(out / f'{number:02d}.webp', 'WEBP', quality=95, method=6)
           PY
           touch public/.nojekyll
+
+      - name: Publish generated files to repository
+        run: |
+          cp public/index.html ./index.html
+          cp public/styles.css ./styles.css
+          cp public/script.js ./script.js
+          cp public/.nojekyll ./.nojekyll
+          mkdir -p assets/images
+          cp public/assets/images/*.webp assets/images/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html styles.css script.js .nojekyll assets/images
+          git diff --cached --quiet || git commit -m "Publish verified 1K photo assets [skip ci]"
+          git push
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
