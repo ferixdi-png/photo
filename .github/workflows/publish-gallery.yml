@@ -1,0 +1,55 @@
+name: Publish final photo gallery
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Restore site package
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > /tmp/site.zip
+          for file in payload/part-*.b64; do
+            base64 --decode "$file" >> /tmp/site.zip
+          done
+          rm -rf public
+          mkdir -p public
+          unzip -q /tmp/site.zip -d public
+          touch public/.nojekyll
+          test -f public/index.html
+          test -f public/assets/images/01.webp
+          test -f public/assets/images/29.webp
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: public
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
