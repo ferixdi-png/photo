@@ -1,0 +1,19 @@
+name: Проверка включения Pages
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  pages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Включить и проверить Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
